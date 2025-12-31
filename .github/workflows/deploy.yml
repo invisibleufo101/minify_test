@@ -1,0 +1,41 @@
+name: Test Minify HTML, CSS, JS
+on:
+  push:
+      branches: [master]
+
+jobs:
+  deploy:
+      runs-on: ubuntu-latest
+    
+      steps:
+        - name: Checkout repository code
+          uses: actions/checkout@v5
+          with:
+            fetch-depth: 2
+
+        - name: Minify HTML/CSS/JS
+          uses: amireshoon/minifyAction@main
+          with:
+            repo: ${{ github.repository }}
+            
+        - name: Run minifier
+          run: |
+            minifier.sh ${{ github.repository }}
+
+        - name: Pushing to production branch
+          uses: actions-js/push@master
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            directory: github/workspace
+            branch: production
+            message: Minified css, js and html
+            author_name: MinifyAction[bot]
+            force: true
+
+
+
+
+
+
+
+          
