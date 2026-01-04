@@ -13,27 +13,10 @@ jobs:
           with:
             fetch-depth: 2
 
-        - name: Minify HTML/CSS/JS
-          uses: amireshoon/minifyAction@main
-          with:
-            repo: ${{ github.repository }}
-            
-        - name: Run minifier
-          run: |
-            minifier.sh ${{ github.repository }}
+        - name: Minify CSS & JS
+          uses: nizarmah/auto-minify@v3
 
-        - name: Pushing to production branch
-          uses: actions-js/push@master
+        - name: Commit to test branches
+          uses: stefanzweifel/git-auto-commit-action@v7
           with:
-            github_token: ${{ secrets.REPO_TOKEN }}
-            directory: github/workspace
             branch: prod
-            force: true
-
-
-
-
-
-
-
-          
