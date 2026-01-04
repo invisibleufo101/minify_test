@@ -25,11 +25,9 @@ jobs:
         - name: Pushing to production branch
           uses: actions-js/push@master
           with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
+            github_token: ${{ secrets.REPO_TOKEN }}
             directory: github/workspace
-            branch: production
-            message: Minified css, js and html
-            author_name: MinifyAction[bot]
+            branch: prod
             force: true
 
 
