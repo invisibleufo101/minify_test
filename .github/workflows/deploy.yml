@@ -3,19 +3,16 @@ on:
   push:
       branches: [master]
 
+permissions:
+  contents: write
+
 jobs:
-
-  permissions:
-    contents: write
-
   deploy:
       runs-on: ubuntu-latest
     
       steps:
         - name: Checkout repository code
           uses: actions/checkout@v5
-          with:
-            fetch-depth: 2
 
         - name: Minify CSS & JS
           uses: nizarmah/auto-minify@v3
@@ -25,7 +22,4 @@ jobs:
         - name: Commit to test branches
           uses: stefanzweifel/git-auto-commit-action@v5
           with:
-            
-            github_token: ${{ secrets.REPO_TOKEN }}
             branch: prod
-            push_options: '--force'
