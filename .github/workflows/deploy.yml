@@ -4,6 +4,9 @@ on:
       branches: [master]
 
 jobs:
+  permissions:
+    content: write
+    
   deploy:
       runs-on: ubuntu-latest
     
@@ -15,8 +18,13 @@ jobs:
 
         - name: Minify CSS & JS
           uses: nizarmah/auto-minify@v3
+          with:
+            overwrite: true 
 
         - name: Commit to test branches
-          uses: stefanzweifel/git-auto-commit-action@v7
+          uses: stefanzweifel/git-auto-commit-action@v5
           with:
+            
+            github_token: ${{ secrets.REPO_TOKEN }}
             branch: prod
+            push_options: '--force'
