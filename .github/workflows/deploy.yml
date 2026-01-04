@@ -4,9 +4,10 @@ on:
       branches: [master]
 
 jobs:
+
   permissions:
-    content: write
-    
+    contents: write
+
   deploy:
       runs-on: ubuntu-latest
     
