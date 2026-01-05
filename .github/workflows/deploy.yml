@@ -22,7 +22,6 @@ jobs:
         with:
           node-version: '20'
 
-      # 1. Install PurgeCSS along with the other tools
       - name: Install Tools
         run: npm install -g terser clean-css-cli purgecss
 
@@ -33,26 +32,28 @@ jobs:
             terser "$file" --compress --mangle --output "${file%.js}.min.js"
           done
 
-      # 2. Purge and Minify CSS
       - name: Purge & Minify CSS
         run: |
           find public/css -name "*.css" ! -name "*.min.css" -print0 | while IFS= read -r -d '' file; do
             echo "Processing $file..."
             
-            # Step A: Purge unused CSS
-            # IMPORTANT: Adjust the --content pattern to match where your HTML/Templates are located.
-            # Below, it looks for any HTML or JS file in the whole repo.
+            # 1. Purge (Remember to update --content path for your specific project!)
             purgecss --css "$file" --content "**/*.html" "**/*.js" --output "${file}.tmp"
 
-            # Step B: Minify the purged result
+            # 2. Minify
             cleancss -o "${file%.css}.min.css" "${file}.tmp"
 
-            # Step C: Cleanup temp file
+            # 3. Cleanup
             rm "${file}.tmp"
           done
 
+      # CHANGED: Now commits to the 'test' branch
       - name: Commit Minified Files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: Purge and Minify assets [skip ci]"
           file_pattern: 'public/**/*.min.*'
+          
+          # Branch Configuration
+          branch: test
+          create_branch: true
