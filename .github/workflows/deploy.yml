@@ -1,26 +1,54 @@
-name: Test Minify HTML, CSS, JS
+name: Minify HTML/CSS/JS and push to prod branch
+
 on:
   push:
-      branches: [master]
+    branches: [master]
+  workflow_dispatch: {}
 
 permissions:
   contents: write
 
+concurrency:
+  group: minify-prod
+  cancel-in-progress: true
+
 jobs:
-  deploy:
-      runs-on: ubuntu-latest
-    
-      steps:
-        - name: Checkout repository code
-          uses: actions/checkout@v5
+  minify_to_prod:
+    runs-on: ubuntu-latest
 
-        - name: Minify CSS & JS
-          uses: nizarmah/auto-minify@v3
-          with:
-            overwrite: true 
+    steps:
+      - name: Checkout master (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        - name: Commit to test branches
-          uses: stefanzweifel/git-auto-commit-action@v5
-          with:
-            branch: prod
-            push_options: '--force'
+      - name: Minify HTML/CSS/JS
+        uses: nizarmah/auto-minify@v3
+        with:
+          overwrite: true
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create/reset prod branch from master
+        run: |
+          set -euo pipefail
+          git fetch origin prod || true
+          git checkout -B prod
+          git reset --hard origin/master
+
+      # - name: Commit minified changes (if any)
+      #   run: |
+      #     set -euo pipefail
+      #     git add -A
+      #     if git diff --cached --quiet; then
+      #       echo "No changes to commit."
+      #       exit 0
+      #     fi
+      #     git commit -m "chore(minify): auto-minify assets [skip ci]"
+
+      - name: Push prod branch
+        run: |
+          git push -u origin prod --force-with-lease
