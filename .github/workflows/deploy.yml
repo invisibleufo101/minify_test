@@ -1,63 +1,58 @@
-name: Minify Assets
+name: Minify and Purge Assets
 
-# Trigger the workflow on push, but only when relevant files change
 on:
   push:
     paths:
       - 'public/css/**.css'
       - 'public/js/**.js'
     branches:
-      - master # Change this to 'master' if that is your default branch
-
-permissions:
-  contents: write
+      - master
 
 jobs:
   minify:
     runs-on: ubuntu-latest
-    
-    # prevent infinite loops if the script commits the minified files back
     if: "!contains(github.event.head_commit.message, 'skip ci')"
 
     steps:
-      # 1. Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js (needed to install the minifiers)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3. Install Minification Tools
-      - name: Install Minifiers
-        run: npm install -g terser clean-css-cli
+      # 1. Install PurgeCSS along with the other tools
+      - name: Install Tools
+        run: npm install -g terser clean-css-cli purgecss
 
-      # 4. Minify JavaScript Files
       - name: Minify JS
         run: |
-          # Find all .js files in public/js that are NOT already .min.js
           find public/js -name "*.js" ! -name "*.min.js" -print0 | while IFS= read -r -d '' file; do
             echo "Minifying $file..."
-            # Create .min.js version using Terser (compress + mangle)
             terser "$file" --compress --mangle --output "${file%.js}.min.js"
           done
 
-      # 5. Minify CSS Files
-      - name: Minify CSS
+      # 2. Purge and Minify CSS
+      - name: Purge & Minify CSS
         run: |
-          # Find all .css files in public/css that are NOT already .min.css
           find public/css -name "*.css" ! -name "*.min.css" -print0 | while IFS= read -r -d '' file; do
-            echo "Minifying $file..."
-            # Create .min.css version using clean-css
-            cleancss -o "${file%.css}.min.css" "$file"
+            echo "Processing $file..."
+            
+            # Step A: Purge unused CSS
+            # IMPORTANT: Adjust the --content pattern to match where your HTML/Templates are located.
+            # Below, it looks for any HTML or JS file in the whole repo.
+            purgecss --css "$file" --content "**/*.html" "**/*.js" --output "${file}.tmp"
+
+            # Step B: Minify the purged result
+            cleancss -o "${file%.css}.min.css" "${file}.tmp"
+
+            # Step C: Cleanup temp file
+            rm "${file}.tmp"
           done
 
-      # 6. Commit and Push changes back to the repo
-      # Note: If you only want these files for deployment artifacts, remove this step.
       - name: Commit Minified Files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: Minify CSS and JS assets [skip ci]"
+          commit_message: "chore: Purge and Minify assets [skip ci]"
           file_pattern: 'public/**/*.min.*'
