@@ -37,15 +37,15 @@ jobs:
           find public/css -name "*.css" ! -name "*.min.css" -print0 | while IFS= read -r -d '' file; do
             echo "Processing $file..."
             
-            # 1. Purge (Remember to update --content path for your specific project!)
-            purgecss --css "$file" --content "**/*.html" "**/*.js" --output "${file}.tmp"
+            # 1. Purge using stdout redirection (Fixes the error)
+            purgecss --css "$file" --content "**/*.html" "**/*.js" --stdout > "${file}.tmp"
 
-            # 2. Minify
+            # 2. Minify the temp file
             cleancss -o "${file%.css}.min.css" "${file}.tmp"
 
             # 3. Cleanup
             rm "${file}.tmp"
-          done
+          done  
 
       # CHANGED: Now commits to the 'test' branch
       - name: Commit Minified Files
