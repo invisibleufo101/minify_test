@@ -39,14 +39,14 @@ jobs:
           git checkout -B prod
           git reset --hard origin/master
 
-      # if git diff --cached --quiet; then
-      #   echo "No changes to commit."
-      #   exit 0
-      # fi
       - name: Commit minified changes (if any)
         run: |
           set -euo pipefail
           git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
           git commit -m "chore(minify): auto-minify assets [skip ci]"
 
       - name: Push prod branch
