@@ -37,15 +37,23 @@ jobs:
           find public/css -name "*.css" ! -name "*.min.css" -print0 | while IFS= read -r -d '' file; do
             echo "Processing $file..."
             
-            # 1. Purge using stdout redirection (Fixes the error)
-            purgecss --css "$file" --content "**/*.html" "**/*.js" --stdout > "${file}.tmp"
+            # Extract the filename (e.g., "style.css")
+            filename=$(basename "$file")
+            
+            # 1. Create a temporary DIRECTORY (PurgeCSS requires this)
+            mkdir -p temp_build_dir
 
-            # 2. Minify the temp file
-            cleancss -o "${file%.css}.min.css" "${file}.tmp"
+            # 2. Run PurgeCSS
+            # It will save the file to: temp_build_dir/style.css
+            purgecss --css "$file" --content "**/*.html" "**/*.js" --output temp_build_dir
 
-            # 3. Cleanup
-            rm "${file}.tmp"
-          done  
+            # 3. Minify
+            # We read the purged file from the temp directory
+            cleancss -o "${file%.css}.min.css" "temp_build_dir/$filename"
+
+            # 4. Cleanup
+            rm -rf temp_build_dir
+          done
 
       # CHANGED: Now commits to the 'test' branch
       - name: Commit Minified Files
