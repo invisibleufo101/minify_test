@@ -7,7 +7,7 @@ on:
       - 'public/css/**.css'
       - 'public/js/**.js'
     branches:
-      - main # Change this to 'master' if that is your default branch
+      - master # Change this to 'master' if that is your default branch
 
 permissions:
   contents: write
