@@ -35,8 +35,8 @@ jobs:
       - name: Create/reset prod branch from master
         run: |
           set -euo pipefail
-          git fetch origin prod || true
-          git checkout -B prod
+          git fetch origin test || true
+          git checkout -B test
           git reset --hard origin/master
 
       - name: Commit minified changes (if any)
@@ -51,4 +51,4 @@ jobs:
 
       - name: Push prod branch
         run: |
-          git push -u origin prod --force-with-lease
+          git push -u origin test --force-with-lease
