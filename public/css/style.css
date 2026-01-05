@@ -721,20 +721,6 @@ progress {
   }
 }
 
-@media (min-width: 992px) {
-
-  .container,
-  .container-sm,
-  .container-md,
-  .container-lg {
-    max-width: 960px;
-  }
-
-  .container-section {
-    max-width: 930px;
-  }
-}
-
 @media (min-width: 1200px) {
 
   .container,
