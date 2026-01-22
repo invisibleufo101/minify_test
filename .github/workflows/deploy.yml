@@ -1,12 +1,7 @@
-name: Minify and Purge Assets
+name: Manual Github actions trigger
 
 on:
-  push:
-    paths:
-      - 'public/css/**.css'
-      - 'public/js/**.js'
-    branches:
-      - master
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,8 +9,7 @@ permissions:
 jobs:
   minify:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,28 +37,15 @@ jobs:
             # Extract the filename (e.g., "style.css")
             filename=$(basename "$file")
             
-            # 1. Create a temporary DIRECTORY (PurgeCSS requires this)
+            # 1. Create a temporary dir (Required for PurgeCSS)
             mkdir -p temp_build_dir
 
-            # 2. Run PurgeCSS
-            # It will save the file to: temp_build_dir/style.css
+            # 2. Run PurgeCSS. Save the file to: temp_build_dir/style.css
             purgecss --css "$file" --content "**/*.html" "**/*.js" --output temp_build_dir
 
-            # 3. Minify
-            # We read the purged file from the temp directory
+            # 3. Minify CSS. Read the purged file from the temp directory
             cleancss -o "${file%.css}.min.css" "temp_build_dir/$filename"
 
-            # 4. Cleanup
+            # 4. Cleanup. Remove the temporary dir.
             rm -rf temp_build_dir
           done
-
-      # CHANGED: Now commits to the 'test' branch
-      - name: Commit Minified Files
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: Purge and Minify assets [skip ci]"
-          file_pattern: 'public/**/*.min.*'
-          
-          # Branch Configuration
-          branch: test
-          create_branch: true
